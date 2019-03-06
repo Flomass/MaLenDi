@@ -1,0 +1,12 @@
+-std=c++11
+-g
+-O3
+-pthread
+-march=native
+-Wall
+-pedantic
+-I c-lib
+-I c-lib/sequence
+-I c-lib/util
+-I c-lib/NR-3.04
+-I c-lib/obj

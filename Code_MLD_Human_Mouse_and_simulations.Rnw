@@ -1,0 +1,120 @@
+\documentclass{article}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+\usepackage{hyperref}
+
+\parindent0mm
+
+% tex code to generate a header with the filename and date
+% to latex this use pdflatex --shell-escape
+%
+\gdef\pwdfile{\jobname.pwd.tex}
+% sed 's/.*\(.\{50,\}\)/... \1/'
+\immediate\write18{echo "\string\gdef\string\pwd{`dirs -l | tail -c 50 `}" > \pwdfile}
+\IfFileExists{\pwdfile}{\input \pwdfile}{\gdef\pwd{.}}
+\pagestyle{myheadings}\markboth%
+{\tt \pwd/\jobname.Rnw - \today}%
+{\tt \pwd/\jobname.Rnw - \today} 
+%------------------------------------------------------------------
+
+\begin{document}
+
+<<setup,echo=FALSE>>=
+opts_chunk$set(comment=NA,fig.width=7,fig.height=7)  # default dimensions of figures
+@
+
+<<MLD_Human_Mouse,echo=F>>=
+setwd("~/pref/GitHub")
+
+library(RColorBrewer)
+
+
+log_binning=function(data,temp=20) {
+
+bin=temp
+data_binned=matrix(ncol=2,nrow=150)
+for (i in 1:151) {
+    temp=temp+1.1^i
+    temp=floor(temp)
+    bin=c(bin,temp)
+}
+for (i in 1:150) {
+data_binned[i,1]=bin[i]/2+bin[i+1]/2
+inter=subset(data,V1>=bin[i] & V1<bin[i+1])
+data_binned[i,2]=sum(inter$V2)/(bin[i+1]-bin[i])
+}
+
+return(data_binned)
+}
+
+
+do_plot=function(data1,data2,simu=0){
+    cols=brewer.pal(9,"Set1")
+    col2=brewer.pal(9,"Pastel1")  
+    maxi=max(data2[which(data2[,2]>0)],data1[which(data1[,2]>0),1])
+    xlim1=c(20,maxi)
+#   xlim1=c(10,500)
+    miny=min(data2[which(data2[,2]>0),2],data1[which(data1[,2]>0),2])/2
+    maxy=max(data2[,2],data1[,2])*2
+    ylim1=c(miny,maxy)#data1[1,2]*1.2)
+    par(oma=c(0,0,0,0),mar=c(3,3.5,1.5,0.5)+0.1)
+    par(cex=1,yaxs="i",las=1)
+
+    plot.new()
+    plot.window(log="xy",xlim=xlim1,ylim=ylim1)
+
+    points(data1,col=cols[1],pch='+',cex=1.5)
+    points(data2,col=cols[2],pch='+',cex=1.5)
+
+   curve(data2[10,2]*data2[10,1]^4/x^4,1,10000,n=1000,add=T,lty=2,col=1)
+    curve(data1[12,2]*data1[12,1]^5/x^5,1,10000,n=1000,add=T,lty=5,col=1,cex=2)
+
+    axis(1,at=c(5,10,25,50,100,250,500,1000,2000),labels=c("5","10","25","50","100","250","500","1000","2000"),cex.axis=0.9)
+    labels=c(expression(10^8),expression(10^6),expression(10^4),expression(10^2),expression(10^0),expression(10^-2))
+    axis(2,at=c(10^8,10^7,10^6,10^5,10^4,10^3,10^2,10^1,10^0,10^-1,10^-2),labels=F,xpd=F,cex.axis=0.9)
+   axis(2,at=c(10^8,10^6,10^4,10^2,10^0,10^-2),labels=labels,xpd=F,cex.axis=0.9)
+    mtext("Match length",side=1,line=2,cex=0.9) 
+    mtext("Number of matches",side=2,line=2.5,cex=0.9,las=0)
+    box()
+    if (simu==0){
+    legend("topright",c("Human - Mouse: non coding","Human - Mouse: exons",expression(r^-4),expression(r^-5)),
+            col=c(cols[2],cols[1],1,1),
+            lty=c(0,0,2,5),
+            pch=c('+','+','',''),
+            cex=0.9)
+            mtext("Human Mouse MLD",side=3,cex=1)
+          }
+    else{
+     legend("topright",c("Orthologs","Paralogs",expression(r^-4),expression(r^-5)),
+     col=c(cols[2],cols[1],1,1),
+     lty=c(0,0,2,5),
+     pch=c('+','+','',''),
+     cex=0.9)
+     mtext("Simulated MLD",side=3,cex=1)
+      
+    }
+}
+
+
+d2=read.table("MLD/mld_human_mouse_non_coding.txt")
+d1=read.table("MLD/mld_human_mouse_exome.txt")
+
+
+cols=rainbow(length(names))
+binned<-log_binning(d1)
+binned2<-log_binning(d2)
+do_plot(binned,binned2)
+@
+
+
+<<MLD_simulated_sequences,echo=F>>=
+d2=read.table("MLD/mld_simulated_sequences.txt_orthologs")
+d1=read.table("MLD/mld_simulated_sequences.txt_paralogs")
+cols=rainbow(length(names))
+binned<-log_binning(d1)
+binned2<-log_binning(d2)
+do_plot(binned,binned2,sim=1)
+@
+
+
+\end{document}
+
