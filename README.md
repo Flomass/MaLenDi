@@ -13,6 +13,9 @@ Exome data of species presented in the paper.
 
 Data used for the figure of the paper, ie already computed MLDs of simulated sequences and of the Human Mouse comparisons (exome and non-coding).
 
-If you have any question, feel free to contact me: florian.massip (at) univ-lyon1.fr
+The Malendi.tar.gz file contains the full project with plotted figures. 
+
+If you have any question, feel free to contact me: florian.massip (at) gmail (dot) com
+
 
 
